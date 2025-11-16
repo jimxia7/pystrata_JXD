@@ -50,6 +50,7 @@ def _load_published_curves():
     global PUBLISHED_CURVES
 
     fpath = Path(__file__).parent / "data" / "published_curves.toml"
+
     with fpath.open("rb") as fp:
         models = tomli.load(fp)["models"]
 
