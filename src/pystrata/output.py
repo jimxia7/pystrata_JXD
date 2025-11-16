@@ -26,6 +26,8 @@ import numpy as np
 import scipy.integrate
 from matplotlib.colors import LogNorm, TwoSlopeNorm
 from scipy.interpolate import interp1d
+import pickle
+from pathlib import Path
 
 try:
     import pandas as pd
@@ -137,6 +139,20 @@ class OutputCollection(collections.abc.Collection):
     def reset(self):
         for o in self:
             o.reset()
+
+    def to_pickle(self,pickle_file_name):
+        if not pickle:
+            raise RuntimeError("Install `pickle` library.")
+
+        pickle_file_path = Path(pickle_file_name)
+
+        if pickle_file_path.suffix.lower() == '.pkl':
+            with open(pickle_file_name, "wb") as f:
+                pickle.dump(self.outputs, f)
+        else:
+            print('output file extension is not .pkl')
+
+        return
 
 
 def append_arrays(many, single):
@@ -258,6 +274,22 @@ class Output:
         df = pd.DataFrame(self.values, index=self.refs, columns=columns)
 
         return df
+    
+    def to_pickle(self,pickle_file_name):
+        if not pickle:
+            raise RuntimeError("Install `pickle` library.")
+
+        df = self.to_dataframe()
+        pickle_file_path = Path(pickle_file_name)
+
+        if pickle_file_path.suffix.lower() == 'pkl':
+            with open(pickle_file_name, "wb") as f:
+                pickle.dump(df, f)
+        else:
+            print('output file extension is not .pkl')
+
+        return
+    
 
     @staticmethod
     def _get_xy(refs, values):
@@ -699,6 +731,30 @@ class ProfileBasedOutput(Output):
             _ln_interped = np.array(nans)
 
         return _ln_interped
+    
+    def _ln_interp_1(self,i,ref):
+        
+        _ref = self.refs
+        # Only select points with valid entries
+        mask = np.isfinite(_ref)
+        _ref = _ref[mask]
+        _ln_values = np.log(self.values[mask])
+
+        if np.any(mask):
+            f = interp1d(
+                _ref,
+                _ln_values,
+                kind="next",
+                fill_value=(_ln_values[0], _ln_values[-1]),
+                bounds_error=False,
+            )
+            _ln_interped = f(ref)
+        else:
+            nans = np.empty_like(ref)
+            nans[:] = np.nan
+            _ln_interped = np.array(nans)
+
+        return _ln_interped
 
     def to_dataframe(self, ref=None):
         if not pd:
@@ -713,8 +769,33 @@ class ProfileBasedOutput(Output):
             columns = self.names
 
         # Ignore zeros in the data
-        n = self.values.shape[1]
-        values = np.exp(np.array([self._ln_interp(i, ref) for i in range(n)])).T
+        if self.values.ndim == 1:
+            n = 1
+            values = np.exp(np.array([self._ln_interp_1(i, ref) for i in range(n)])).T
+        else:
+            n = self.values.shape[1]
+            values = np.exp(np.array([self._ln_interp(i, ref) for i in range(n)])).T
+
+        df = pd.DataFrame(values, index=ref, columns=columns)
+
+        return df
+    
+    def to_pickle(self, pickle_out_file):
+        if not pickle:
+            raise RuntimeError("Install `pickle` library.")
+
+        if isinstance(self.names[0], tuple):
+            columns = pd.MultiIndex.from_tuples(self.names)
+        else:
+            columns = self.names
+
+        # Ignore zeros in the data
+        if self.values.ndim == 1:
+            n = 1
+            values = np.exp(np.array([self._ln_interp_1(i, ref) for i in range(n)])).T
+        else:
+            n = self.values.shape[1]
+            values = np.exp(np.array([self._ln_interp(i, ref) for i in range(n)])).T
 
         df = pd.DataFrame(values, index=ref, columns=columns)
 
