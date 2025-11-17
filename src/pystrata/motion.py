@@ -358,7 +358,7 @@ class TimeSeriesMotion(Motion):
             if dt == None:
                 raise ValueError("When time_acceleration is False, dt must be provided.")
 
-            a = np.asarray(data[:, 0], dtype=float)
+            a = np.asarray(data, dtype=float)
             pga = np.max(np.abs(a))
 
             if scale_param == 'pga':
