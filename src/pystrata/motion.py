@@ -255,13 +255,30 @@ class TimeSeriesMotion(Motion):
             Scale factor to apply to the motion.
         """
         with open(filename) as fp:
-            next(fp)
-            description = next(fp).strip()
-            next(fp)
-            parts = next(fp).split()
-            time_step = float(parts[1])
+            next(fp)                               # 1) PEER line
+            description = next(fp).strip()         # 2) e.g., event/site line
+            next(fp)                               # 3) "ACCELERATION TIME SERIES IN UNITS OF G"
+            header = next(fp)                      # 4) "NPTS=   7999, DT=   .0050 SEC,"
 
-            accels = np.array([float(part) for line in fp for part in line.split()])
+            # Extract DT (supports leading dot, scientific notation, spaces/commas)
+            m_dt = re.search(
+                r"DT\s*=\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)",
+                header
+            )
+            if not m_dt:
+                raise ValueError(f"Could not parse DT from header: {header!r}")
+            time_step = float(m_dt.group(1))
+
+            # Optional: extract NPTS to trim data if needed
+            m_npts = re.search(r"NPTS\s*=\s*(\d+)", header)
+            npts = int(m_npts.group(1)) if m_npts else None
+
+            # Read all remaining numeric tokens as accelerations
+            accels = np.array([float(tok) for line in fp for tok in line.split()])
+
+        # Trim to NPTS if the file contains padding/trailing zeros
+        if npts is not None and len(accels) > npts:
+            accels = accels[:npts]
 
         accels *= scale
         return cls(filename, description, time_step, accels)
