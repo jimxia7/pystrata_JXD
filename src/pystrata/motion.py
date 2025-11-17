@@ -244,7 +244,12 @@ class TimeSeriesMotion(Motion):
         )
 
     @classmethod
-    def load_at2_file(cls, filename, scale=1.0):
+    def load_at2_file(cls, 
+                      filename, 
+                      *,
+                      scale_param = 'N/A',
+                      scale: float = 1.0,
+                      scale_pga: float = 0.5,):
         """Read an AT2 formatted time series.
 
         Parameters
@@ -280,7 +285,15 @@ class TimeSeriesMotion(Motion):
         if npts is not None and len(accels) > npts:
             accels = accels[:npts]
 
-        accels *= scale
+        pga = np.max(np.abs(accels))
+
+        if scale_param == 'pga':
+            accels = accels * scale_pga / pga
+        elif scale_param == 'scale':
+            accels = accels * scale
+        else:
+            accels = accels
+            
         return cls(filename, description, time_step, accels)
     
     @classmethod
