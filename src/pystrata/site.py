@@ -107,9 +107,11 @@ class NonlinearProperty:
 
         if limits is None:
             if param == "mod_reduc":
-                self._limits = 0.001, 1
+                self._limits = (0.001, 1)
+            elif param == "damping":
+                self._limits = (0, 0.49)
             else:
-                self._limits = 0, 0.49
+                self._limits = (0,1)
 
         self._update()
 
