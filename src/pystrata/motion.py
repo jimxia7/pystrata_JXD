@@ -288,7 +288,7 @@ class TimeSeriesMotion(Motion):
             cls,
             filename,
             *,
-            scale_param = 'pga',
+            scale_param = 'N/A',
             scale: float = 1.0,
             scale_pga: float = 0.5,
             time_acceleration: bool = True,
@@ -338,6 +338,8 @@ class TimeSeriesMotion(Motion):
                 a = a * scale_pga / pga
             elif scale_param == 'scale':
                 a = a * scale
+            else:
+                a = a
 
             desc = f"TXT file: {os.path.basename(filename)}"
 
@@ -363,6 +365,8 @@ class TimeSeriesMotion(Motion):
                 a = a * scale_pga / pga
             elif scale_param == 'scale':
                 a = a * scale
+            else:
+                a = a
 
             desc = f"TXT file: {os.path.basename(filename)}"
 
