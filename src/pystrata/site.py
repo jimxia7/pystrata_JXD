@@ -2158,6 +2158,8 @@ class Profile(collections.abc.Container):
     def _get_values(self, attr):
         return np.array([getattr(layer, attr) for layer in self])
 
+
+import pystrata
 class CreateSiteProfile:
     """
     Create a pystrata profile using parameters in a Pandas dataframe.
