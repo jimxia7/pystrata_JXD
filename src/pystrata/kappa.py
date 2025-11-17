@@ -5,14 +5,14 @@ import pandas as pd
 from scipy.stats import linregress
 
 
-def calculate_kappa(data, start_freq, end_freq):
+def calculate_kappa(data, start_freq, end_freq,smoothing = False,smoothing_window = 30):
     if isinstance(data,pystrata.motion.TimeSeriesMotion):
 
         
         fourier_amps = abs(data.fourier_amps)
         freqs = data.freqs
-
-        smoothed_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
+        if smoothing:
+            fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
 
         freq_min = start_freq
         freq_max = end_freq
@@ -21,7 +21,7 @@ def calculate_kappa(data, start_freq, end_freq):
 
         if np.any(mask):
             freqs_masked = freqs[mask]
-            log_amps = np.log(smoothed_amps[mask])
+            log_amps = np.log(fourier_amps[mask])
 
             slope, intercept, r_value, p_value, std_err = linregress(freqs_masked, log_amps)
 
@@ -44,10 +44,10 @@ def calculate_kappa(data, start_freq, end_freq):
 
             for col in df.columns:
                 fourier_amps = df[col].to_numpy()
+                if smoothing:
+                    fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
 
-                smoothed_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
-
-                log_amps = np.log(smoothed_amps[mask])
+                log_amps = np.log(fourier_amps[mask])
 
                 slope, intercept, r_value, p_value, std_err = linregress(freqs_masked, log_amps)
 
@@ -57,4 +57,5 @@ def calculate_kappa(data, start_freq, end_freq):
                 fitted_lines_df[col] = fitted_line
                 kappa_df.loc[col,'kappa'] = kappa
 
-                return kappa_df, fitted_lines_df
+            
+            return kappa_df, fitted_lines_df
