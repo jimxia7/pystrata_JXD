@@ -35,7 +35,7 @@ import pandas as pd
 import scipy.constants
 import tomli
 from scipy.interpolate import interp1d
-
+from pathlib import Path
 from .motion import GRAVITY, WaveField
 
 COMP_MODULUS_MODEL = "dormieux"
