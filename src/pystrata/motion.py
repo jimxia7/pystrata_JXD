@@ -288,50 +288,85 @@ class TimeSeriesMotion(Motion):
             cls,
             filename,
             *,
+            scale_param = 'pga',
             scale: float = 1.0,
+            scale_pga: float = 0.5,
+            time_acceleration: bool = True,
             time_col: int = 0,
             value_col: int = 1,
+            dt = None,
             skiprows: int = 0,
             delimiter=None,):
         
-        
-        data = np.loadtxt(
-                filename,
-                delimiter=delimiter,
-                comments="#",
-                skiprows=skiprows,
-                ndmin=2,
-                )
+        if time_acceleration == True:
+            data = np.loadtxt(
+                    filename,
+                    delimiter=delimiter,
+                    comments="#",
+                    skiprows=skiprows,
+                    ndmin=2,
+                    )
     
-        if data.shape[1] <= max(time_col, value_col):
+            if data.shape[1] <= max(time_col, value_col):
+                    raise ValueError(
+                        f"Requested columns time_col={time_col}, value_col={value_col} "
+                        f"but file has only {data.shape[1]} column(s)."
+                    )
+
+            t = np.asarray(data[:, time_col], dtype=float)
+            a = np.asarray(data[:, value_col], dtype=float)
+            pga = np.max(np.abs(a))
+
+            if t.size < 2:
+                raise ValueError("Time column must contain at least two samples.")
+
+            dt = np.diff(t)
+            # Use median dt, but verify near-uniform spacing
+            dt_med = float(np.median(dt))
+            if dt_med <= 0:
+                raise ValueError("Non-positive or invalid time spacing detected.")
+
+                # Relative spread of dt: tolerate small jitter (<= 1e-3 relative)
+            spread = np.max(np.abs(dt - dt_med)) / dt_med
+            if spread > 1e-3:
                 raise ValueError(
-                    f"Requested columns time_col={time_col}, value_col={value_col} "
-                    f"but file has only {data.shape[1]} column(s)."
-                )
+                        f"Time column is not uniformly spaced (relative spread {spread:.2e} > 1e-3). "
+                        "Resample your data to a uniform time step or provide a cleaner file."
+                    )
 
-        t = np.asarray(data[:, time_col], dtype=float)
-        a = np.asarray(data[:, value_col], dtype=float)
+            if scale_param == 'pga':
+                a = a * scale_pga / pga
+            elif scale_param == 'scale':
+                a = a * scale
 
-        if t.size < 2:
-            raise ValueError("Time column must contain at least two samples.")
+            desc = f"TXT file: {os.path.basename(filename)}"
 
-        dt = np.diff(t)
-        # Use median dt, but verify near-uniform spacing
-        dt_med = float(np.median(dt))
-        if dt_med <= 0:
-            raise ValueError("Non-positive or invalid time spacing detected.")
+            return cls(filename, desc, dt_med, a)
+        
+        elif time_acceleration == False:
 
-            # Relative spread of dt: tolerate small jitter (<= 1e-3 relative)
-        spread = np.max(np.abs(dt - dt_med)) / dt_med
-        if spread > 1e-3:
-            raise ValueError(
-                    f"Time column is not uniformly spaced (relative spread {spread:.2e} > 1e-3). "
-                    "Resample your data to a uniform time step or provide a cleaner file."
-                )
+            data = np.loadtxt(
+                    filename,
+                    delimiter=delimiter,
+                    comments="#",
+                    skiprows=skiprows,
+                    ndmin=1,
+                    )
+    
+            if dt == None:
+                raise ValueError("When time_acceleration is False, dt must be provided.")
 
-        a = a * scale
-        desc = f"TXT file: {os.path.basename(filename)}"
-        return cls(filename, desc, dt_med, a)
+            a = np.asarray(data[:, 0], dtype=float)
+            pga = np.max(np.abs(a))
+
+            if scale_param == 'pga':
+                a = a * scale_pga / pga
+            elif scale_param == 'scale':
+                a = a * scale
+
+            desc = f"TXT file: {os.path.basename(filename)}"
+
+            return cls(filename, desc, dt, a)
 
     @classmethod
     def load_smc_file(cls, filename, scale=1.0):
