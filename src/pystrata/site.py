@@ -112,7 +112,8 @@ class NonlinearProperty:
                 self._limits = (0, 0.49)
             else:
                 self._limits = (0,1)
-
+        else:
+            self._limits = limits
         self._update()
 
     @classmethod
