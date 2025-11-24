@@ -80,6 +80,10 @@ so that the environment is discoverable by `Jupyter` with:
 
     conda install ipykernel nb_conda_kernels
 
+### Requirement
+
+Need python version < 3.14.0
+
 ## Citation
 
 Please cite this software using the following
