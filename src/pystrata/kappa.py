@@ -21,7 +21,7 @@ def calculate_kappa(data,
         if smoothing:
             fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
         if normalization:
-            idx = np.argmin(np.abs(freq - normalization_freq))
+            idx = np.argmin(np.abs(freqs - normalization_freq))
             fourier_amps = fourier_amps/fourier_amps[idx]
 
         freq_min = start_freq
@@ -57,7 +57,7 @@ def calculate_kappa(data,
                 if smoothing:
                     fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
                 if normalization:
-                    idx = np.argmin(np.abs(freq - normalization_freq))
+                    idx = np.argmin(np.abs(freqs - normalization_freq))
                     fourier_amps = fourier_amps/fourier_amps[idx]
                     
                 log_amps = np.log(fourier_amps[mask])
