@@ -5,7 +5,14 @@ import pandas as pd
 from scipy.stats import linregress
 
 
-def calculate_kappa(data, start_freq, end_freq,smoothing = False,smoothing_window = 30):
+def calculate_kappa(data, 
+                    start_freq, 
+                    end_freq,
+                    smoothing = False,
+                    smoothing_window = 30,
+                   normalization = False,
+                   normalization_freq = 3):
+                       
     if isinstance(data,pystrata.motion.TimeSeriesMotion):
 
         
@@ -13,6 +20,9 @@ def calculate_kappa(data, start_freq, end_freq,smoothing = False,smoothing_windo
         freqs = data.freqs
         if smoothing:
             fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
+        if normalization:
+            idx = np.argmin(np.abs(freq - normalization_freq))
+            fourier_amps = fourier_amps/fourier_amps[idx]
 
         freq_min = start_freq
         freq_max = end_freq
@@ -46,7 +56,10 @@ def calculate_kappa(data, start_freq, end_freq,smoothing = False,smoothing_windo
                 fourier_amps = df[col].to_numpy()
                 if smoothing:
                     fourier_amps = pykooh.smooth(freqs,freqs,fourier_amps,30)
-
+                if normalization:
+                    idx = np.argmin(np.abs(freq - normalization_freq))
+                    fourier_amps = fourier_amps/fourier_amps[idx]
+                    
                 log_amps = np.log(fourier_amps[mask])
 
                 slope, intercept, r_value, p_value, std_err = linregress(freqs_masked, log_amps)
