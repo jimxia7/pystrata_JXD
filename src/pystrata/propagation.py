@@ -729,7 +729,7 @@ class FrequencyDependentEqlCalculator(EquivalentLinearCalculator):
         self._smoother = None
         self._strain_ratio = strain_ratio
         self._tolerance = tolerance
-        self._max_iterations = max_iteration
+        self._max_iterations =  max_iterations
         self._strain_limit = strain_limit
 
     @property
