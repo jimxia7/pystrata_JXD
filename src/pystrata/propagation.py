@@ -727,6 +727,10 @@ class FrequencyDependentEqlCalculator(EquivalentLinearCalculator):
 
         self._method = method
         self._smoother = None
+        self._strain_ratio = strain_ratio
+        self._tolerance = tolerance
+        self._max_iterations = max_iteration
+        self._strain_limit = strain_limit
 
     @property
     def name(self):
@@ -741,7 +745,7 @@ class FrequencyDependentEqlCalculator(EquivalentLinearCalculator):
 
         This step was recommended in Section 8.3.1 of Zalachoris (2014).
         """
-        eql = EquivalentLinearCalculator()
+        eql = EquivalentLinearCalculator(strain_ratio=self._strain_ratio, tolerance=self._tolerance, max_iterations=self._max_iterations, strain_limit=self._strain_limit)
         eql(self._motion, self._profile, self._loc_input)
 
     def _calc_strain(self, loc_input, loc_layer, motion, *args):
