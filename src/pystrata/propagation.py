@@ -611,6 +611,7 @@ class EquivalentLinearCalculator(LinearElasticCalculator):
                     limited_iter = iteration
 
             iteration += 1
+            print(f"Iteration {Iteration}: Maximum Error: {max_error}")
 
         # Compute the maximum strain within the profile.
         for index, layer in enumerate(profile[:-1]):
